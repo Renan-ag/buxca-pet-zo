@@ -1,0 +1,112 @@
+@startuml
+
+entity User {
+  +id : UUID
+  email : string
+  name : string
+  cpf : string
+  phone : string
+  created_at : datetime
+  updated_at : datetime
+  deleted_at : datetime
+}
+
+entity Credential {
+  +id : UUID
+  user_id : UUID
+  password_hash : string
+  created_at : datetime
+}
+
+entity OAuthAccount {
+  +id : UUID
+  user_id : UUID
+  provider : string
+  provider_user_id : string
+  created_at : datetime
+}
+
+entity Occurrence {
+  +id : UUID
+  user_id : UUID
+  type : LOST | FOUND
+  status : ACTIVE | RESOLVED | CANCELLED
+  location : string
+  created_at : datetime
+  updated_at : datetime
+  deactivated_at : datetime
+}
+
+entity Pet {
+  +id : UUID
+  occurrence_id : UUID
+  name : string
+  species : string
+  breed : string
+  description : text
+  created_at : datetime
+  updated_at : datetime
+  deleted_at : datetime
+}
+
+entity Image {
+  +id : UUID
+  pet_id : UUID
+  url : string
+  type : string
+  position : int
+  created_at : datetime
+}
+
+entity Notice {
+  +id : UUID
+  occurrence_id : UUID
+  message : text
+  contact_info : string
+  sent_at : datetime
+  created_at : datetime
+}
+
+' =====================
+' RELATIONSHIPS
+' =====================
+
+User ||--o| Credential : has
+User ||--o{ OAuthAccount : links
+User ||--o{ Occurrence : creates
+
+Occurrence ||--|{ Pet : contains
+Pet ||--o{ Image : has
+Occurrence ||--o{ Notice : receives
+
+' =====================
+' NOTES
+' =====================
+
+note right of Credential
+Used for email/password
+authentication.
+Optional: users may rely
+only on OAuth.
+end note
+
+note right of OAuthAccount
+Supports multiple providers
+(Google, GitHub, etc.).
+(provider + provider_user_id)
+must be unique.
+end note
+
+note bottom of Occurrence
+Business rules:
+- Only one ACTIVE occurrence per user
+- Status lifecycle:
+  ACTIVE → RESOLVED | CANCELLED
+end note
+
+note bottom of Pet
+Cascade delete:
+Occurrence → Pets → Images
+end note
+
+@enduml

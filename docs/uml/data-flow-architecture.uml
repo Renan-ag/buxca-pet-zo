@@ -1,0 +1,68 @@
+@startuml
+actor Visitor
+actor User
+
+rectangle "Web Frontend" {
+  Visitor --> (Browse Occurrences)
+  Visitor --> (Send Notice)
+  Visitor --> (Register / Login)
+
+  User --> (Create / Reactivate Occurrence)
+  User --> (Upload Pet Images)
+  User --> (Request AI Assistance)
+}
+
+rectangle "Backend API" {
+  (Register / Login) --> (Auth Service)
+  (Create / Reactivate Occurrence) --> (Occurrence Service)
+  (Send Notice) --> (Notice Service)
+  (Request AI Assistance) --> (AI Integration Service)
+}
+
+rectangle "Auth Service" {
+  (Email/Password Auth)
+  (OAuth Auth)
+}
+
+rectangle "External Services" {
+  (OAuth Provider)
+  (AI Service)
+  (Map Provider)
+}
+
+rectangle "Database" {
+  (Users Table)
+  (Credentials Table)
+  (OAuth Accounts Table)
+  (Occurrences Table)
+  (Pets Table)
+  (Images Table)
+  (Notices Table)
+}
+
+(Auth Service) --> (Email/Password Auth)
+(Email/Password Auth) --> (Credentials Table)
+
+(Auth Service) --> (OAuth Auth)
+(OAuth Auth) --> (OAuth Provider)
+(OAuth Provider) --> (OAuth Auth)
+(OAuth Auth) --> (OAuth Accounts Table)
+
+(Auth Service) --> (Users Table)
+
+(Browse Occurrences) --> (Occurrence Service)
+(Occurrence Service) --> (Occurrences Table)
+(Occurrence Service) --> (Pets Table)
+(Occurrence Service) --> (Images Table)
+
+(Notice Service) --> (Notices Table)
+
+(AI Integration Service) --> (AI Service)
+(Occurrence Service) --> (Map Provider)
+
+note right of Backend API
+Background jobs:
+- Deactivate after 15 days
+- Delete after 30 days inactive
+end note
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+left to right direction
+
+actor Visitor
+actor "Authenticated User" as User
+actor System
+actor "OAuth Service" as OAuth
+actor "AI Service" as AI
+
+User --> (Create lost pet occurrence)
+User --> (Create found pet occurrence)
+User --> (Reactivate occurrence)
+User --> (Use AI assistance to search pet)
+
+Visitor --> (View occurrences)
+Visitor --> (Send notice to owner)
+
+OAuth --> (Authenticate user)
+
+System --> (Deactivate occurrence after 15 days)
+System --> (Delete occurrence after 30 days inactive)
+
+(Use AI assistance to search pet) --> AI
+@enduml

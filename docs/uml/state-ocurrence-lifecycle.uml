@@ -1,0 +1,11 @@
+@startuml
+
+[*] --> Active
+
+Active --> Inactive : 15 days without update
+Inactive --> Active : User reactivation
+Inactive --> Deleted : 30 days inactive
+
+Deleted --> [*]
+
+@enduml

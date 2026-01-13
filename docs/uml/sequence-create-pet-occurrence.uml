@@ -1,0 +1,16 @@
+@startuml
+actor User
+participant "Frontend" as FE
+participant "Backend API" as API
+participant "Database" as DB
+
+User -> FE : Fill occurrence form
+FE -> API : POST /occurrences
+API -> DB : Check active occurrence
+DB --> API : No active occurrence
+API -> DB : Save occurrence
+API -> DB : Save pets
+API -> DB : Save images
+API --> FE : Occurrence created
+FE --> User : Confirmation
+@enduml

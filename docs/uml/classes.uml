@@ -1,0 +1,115 @@
+@startuml
+
+class User {
+  +id: UUID
+  +email: string
+  +name: string
+  +cpf: string
+  +phone: string
+  +createdAt: Date
+  +updatedAt: Date
+  +deletedAt: Date
+}
+
+class Credential {
+  +id: UUID
+  +passwordHash: string
+  +createdAt: Date
+}
+
+class OAuthAccount {
+  +id: UUID
+  +provider: string
+  +providerUserId: string
+  +createdAt: Date
+}
+
+class Occurrence {
+  +id: UUID
+  +type: OccurrenceType
+  +status: OccurrenceStatus
+  +location: string
+  +createdAt: Date
+  +updatedAt: Date
+  +deactivatedAt: Date
+}
+
+class Pet {
+  +id: UUID
+  +name: string
+  +species: string
+  +breed: string
+  +description: string
+  +createdAt: Date
+  +updatedAt: Date
+  +deletedAt: Date
+}
+
+class Image {
+  +id: UUID
+  +url: string
+  +type: string
+  +position: int
+  +createdAt: Date
+}
+
+class Notice {
+  +id: UUID
+  +message: string
+  +contactInfo: string
+  +sentAt: Date
+  +createdAt: Date
+}
+
+enum OccurrenceType {
+  LOST
+  FOUND
+}
+
+enum OccurrenceStatus {
+  ACTIVE
+  RESOLVED
+  CANCELLED
+}
+
+' =====================
+' RELATIONSHIPS
+' =====================
+
+User "1" --> "0..1" Credential : has
+User "1" --> "0..*" OAuthAccount : links
+User "1" --> "0..*" Occurrence : creates
+
+Occurrence "1" --> "1..*" Pet : contains
+Pet "1" --> "0..*" Image : has
+Occurrence "1" --> "0..*" Notice : receives
+
+' =====================
+' NOTES
+' =====================
+
+note right of Credential
+Used for email/password
+authentication.
+Optional for OAuth-only users.
+end note
+
+note right of OAuthAccount
+Supports multiple providers.
+(provider + providerUserId)
+must be unique.
+end note
+
+note right of Occurrence
+Business rules:
+- Only one ACTIVE occurrence per user
+- Status lifecycle:
+  ACTIVE → RESOLVED | CANCELLED
+end note
+
+note bottom of Pet
+Cascade delete:
+Occurrence → Pets → Images
+end note
+
+@enduml
