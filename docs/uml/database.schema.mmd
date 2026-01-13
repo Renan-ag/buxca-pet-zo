@@ -1,0 +1,134 @@
+erDiagram
+  USERS {
+    UUID id PK
+    VARCHAR email UK
+    VARCHAR name
+    VARCHAR cpf UK
+    VARCHAR phone UK
+    TIMESTAMP created_at
+    TIMESTAMP updated_at
+    TIMESTAMP deleted_at
+  }
+
+  CREDENTIALS {
+    UUID id PK
+    UUID user_id FK
+    VARCHAR password_hash
+    TIMESTAMP created_at
+  }
+
+  OAUTH_ACCOUNTS {
+    UUID id PK
+    UUID user_id FK
+    VARCHAR provider
+    VARCHAR provider_user_id
+    TIMESTAMP created_at
+  }
+
+  OCCURRENCES {
+    UUID id PK
+    UUID user_id FK
+    VARCHAR type
+    VARCHAR status
+    VARCHAR location
+    TIMESTAMP created_at
+    TIMESTAMP updated_at
+    TIMESTAMP deactivated_at
+  }
+
+  PETS {
+    UUID id PK
+    UUID occurrence_id FK
+    VARCHAR name
+    VARCHAR species
+    VARCHAR breed
+    TEXT description
+    TIMESTAMP created_at
+    TIMESTAMP updated_at
+    TIMESTAMP deleted_at
+  }
+
+  IMAGES {
+    UUID id PK
+    UUID pet_id FK
+    VARCHAR url
+    VARCHAR type
+    INTEGER position
+    TIMESTAMP created_at
+  }
+
+  NOTICES {
+    UUID id PK
+    UUID occurrence_id FK
+    TEXT message
+    VARCHAR contact_info
+    TIMESTAMP sent_at
+    TIMESTAMP created_at
+  }
+
+  %% =====================
+  %% RELATIONSHIPS
+  %% =====================
+
+  USERS ||--o| CREDENTIALS : has
+  USERS ||--o{ OAUTH_ACCOUNTS : links
+  USERS ||--o{ OCCURRENCES : creates
+
+  OCCURRENCES ||--|{ PETS : contains
+  PETS ||--o{ IMAGES : has
+  OCCURRENCES ||--o{ NOTICES : receives
+
+
+  %% =====================
+  %% BUSINESS RULES (DOC)
+  %% =====================
+  %% OCCURRENCES.status (logical enum):
+  %% - ACTIVE
+  %% - RESOLVED
+  %% - CANCELLED
+
+
+  %% =====================
+  %% INDEXES
+  %% =====================
+
+  %% USERS
+  %% CREATE UNIQUE INDEX idx_users_email
+  %%   ON users (email);
+  %% CREATE UNIQUE INDEX idx_users_cpf
+  %%   ON users (cpf);
+  %% CREATE INDEX idx_users_name
+  %%   ON users (name);
+
+  %% CREDENTIALS
+  %% CREATE UNIQUE INDEX idx_credentials_user_id
+  %%   ON credentials (user_id);
+
+  %% OAUTH_ACCOUNTS
+  %% CREATE UNIQUE INDEX idx_oauth_provider_user
+  %%   ON oauth_accounts (provider, provider_user_id);
+  %% CREATE INDEX idx_oauth_user_id
+  %%   ON oauth_accounts (user_id);
+
+  %% OCCURRENCES
+  %% CREATE INDEX idx_occurrences_status_created_at
+  %%   ON occurrences (status, created_at DESC);
+  %% CREATE UNIQUE INDEX idx_occurrence_one_active_per_user
+  %%   ON occurrences (user_id)
+  %%   WHERE status = 'ACTIVE';
+  %% CREATE INDEX idx_occurrences_deactivated_at
+  %%   ON occurrences (deactivated_at);
+
+  %% PETS
+  %% CREATE INDEX idx_pets_occurrence_id
+  %%   ON pets (occurrence_id);
+
+  %% IMAGES
+  %% CREATE INDEX idx_images_pet_id
+  %%   ON images (pet_id);
+
+  %% NOTICES
+  %% CREATE INDEX idx_notices_occurrence_id
+  %%   ON notices (occurrence_id);
+  %% CREATE INDEX idx_notices_sent_at
+  %%   ON notices (sent_at DESC);
