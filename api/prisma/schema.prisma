@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OCCURRENCE_STATUS {
+  ACTIVE
+  RESOLVED
+  CANCELLED
+}
+
+enum OCCURRENCE_TYPE {
+  LOST
+  FOUND
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  name      String?
+  cpf       String   @unique
+  phone     String   @unique
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  credentials    Credential?
+  oauthAccounts  OAuthAccount[]
+  occurrences    Occurrence[]
+
+  @@index([name], map: "idx_users_name")
+  @@map("users")
+}
+
+model Credential {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
+  passwordHash String   @map("password_hash")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credentials")
+}
+
+model OAuthAccount {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  provider        String
+  providerUserId  String   @map("provider_user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId], map: "idx_oauth_provider_user")
+  @@index([userId], map: "idx_oauth_user_id")
+  @@map("oauth_accounts")
+}
+
+model Occurrence {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      OCCURRENCE_TYPE
+  status    OCCURRENCE_STATUS
+  location  String
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  deactivatedAt DateTime? @map("deactivated_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pets     Pet[]
+  notices  Notice[]
+
+  @@index([status, createdAt(sort: Desc)], map: "idx_occurrences_status_created_at")
+  @@index([deactivatedAt], map: "idx_occurrences_deactivated_at")
+  @@map("occurrences")
+}
+
+model Pet {
+  id            String   @id @default(uuid()) @db.Uuid
+  occurrenceId  String   @map("occurrence_id") @db.Uuid
+
+  name        String
+  species     String
+  breed       String?
+  description String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  occurrence Occurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+  images     Image[]
+
+  @@index([occurrenceId], map: "idx_pets_occurrence_id")
+  @@map("pets")
+}
+
+model Image {
+  id      String   @id @default(uuid()) @db.Uuid
+  petId   String   @map("pet_id") @db.Uuid
+  url     String
+  type    String
+  position Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId], map: "idx_images_pet_id")
+  @@map("images")
+}
+
+model Notice {
+  id           String   @id @default(uuid()) @db.Uuid
+  occurrenceId String   @map("occurrence_id") @db.Uuid
+  message      String
+  contactInfo  String   @map("contact_info")
+
+  sentAt    DateTime? @map("sent_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  occurrence Occurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+
+  @@index([occurrenceId], map: "idx_notices_occurrence_id")
+  @@index([sentAt(sort: Desc)], map: "idx_notices_sent_at")
+  @@map("notices")
+}
